@@ -1,0 +1,22 @@
+services:
+  ssh-victim:
+    build: .
+    image: hr_range/ssh-victim:4.14.5
+    container_name: ssh-victim
+    hostname: ssh-victim
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - siem
+    volumes:
+      - ssh_victim_var:/var/ossec
+    environment:
+      - WAZUH_MANAGER=wazuh.manager
+      - WAZUH_AGENT_NAME=ssh-victim
+networks:
+  siem:
+    external: true
+    name: siem_default
+volumes:
+  ssh_victim_var:

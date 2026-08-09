@@ -1,0 +1,23 @@
+---
+_meta:
+  type: "internalusers"
+  config_version: 2
+admin:
+  hash: "REPLACE_ME_GENERATE_WITH_hash.sh"
+  reserved: true
+  hidden: false
+  backend_roles:
+  - "admin"
+  attributes: {}
+  description: "Demo admin user"
+  opendistro_security_roles: []
+  static: false
+kibanaserver:
+  hash: "REPLACE_ME_GENERATE_WITH_hash.sh"
+  reserved: true
+  hidden: false
+  backend_roles: []
+  attributes: {}
+  description: "Demo kibanaserver user"
+  opendistro_security_roles: []
+  static: false

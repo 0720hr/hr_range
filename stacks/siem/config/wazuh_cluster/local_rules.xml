@@ -1,0 +1,31 @@
+<group name="local,syslog,sshd,pam,su,">
+
+  <!-- Overwrite the built-in brute-force-then-success rule to add SSH/T1110
+       context and raise severity. Carries $(srcip) so the attacker address appears in the alert. -->
+  <rule id="40112" level="13" timeframe="240" overwrite="yes">
+    <if_group>authentication_success</if_group>
+    <if_matched_group>authentication_failures</if_matched_group>
+    <same_source_ip />
+    <description>Compromise: successful login from $(srcip) after a brute-force from the same IP (T1110/T1078).</description>
+    <mitre><id>T1110</id><id>T1078</id></mitre>
+    <group>authentication_success,attack,</group>
+  </rule>
+
+  <rule id="100004" level="13" timeframe="600">
+    <if_sid>5501</if_sid>
+    <match>opened for user root</match>
+    <if_matched_sid>5763</if_matched_sid>
+    <description>CRITICAL: successful su-to-root by a brute-forced account - full host compromise (T1548/T1078).</description>
+    <mitre><id>T1548</id><id>T1078</id></mitre>
+    <group>authentication_success,attack,privilege_escalation,</group>
+  </rule>
+
+  <rule id="100003" level="12" timeframe="600">
+    <if_sid>5301</if_sid>
+    <if_matched_sid>5763</if_matched_sid>
+    <description>Privilege escalation attempt: failed su-to-root by a recently brute-forced account (T1548).</description>
+    <mitre><id>T1548</id></mitre>
+    <group>authentication_failed,attack,privilege_escalation,</group>
+  </rule>
+
+</group>

@@ -1,0 +1,13 @@
+services:
+  attacker:
+    build: .
+    image: hr_range/attacker:1.0
+    container_name: attacker
+    hostname: attacker
+    restart: unless-stopped
+    networks:
+      - siem
+networks:
+  siem:
+    external: true
+    name: siem_default

@@ -1,0 +1,12 @@
+secrets.env
+*.env
+Home-Lab-Project.md
+Home-Lab-Project.docx
+stacks/siem/config/wazuh_indexer_ssl_certs/
+*.bak
+*.bak2
+.env
+stacks/siem/config/wazuh_indexer/internal_users.yml
+stacks/siem/config/wazuh_dashboard/wazuh.yml
+PROJECT-NOTES.md
+stacks/siem/config/wazuh_cluster/wazuh_manager.conf
