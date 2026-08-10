@@ -308,6 +308,12 @@
     <disabled>yes</disabled>
   </cluster>
 
+  <integration>
+    <name>shuffle</name>
+    <hook_url>http://host.docker.internal:3001/api/v1/hooks/REPLACE_ME_WEBHOOK_ID</hook_url>
+    <rule_id>40112,100003,100004</rule_id>
+    <alert_format>json</alert_format>
+  </integration>
 </ossec_config>
 
 <ossec_config>

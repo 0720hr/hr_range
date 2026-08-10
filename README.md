@@ -23,16 +23,34 @@ The part worth reading is a rule I wrote that never fired, even though there was
 | Automatic response | Blocks the attacker's address, proven by the attacker's own connection timing out afterwards |
 | Hardening | Three service passwords replaced, four unused accounts deleted, all secrets taken out of the repository |
 
+### 02. [SOC Automation](02-soc-automation/)
+
+A SIEM tells you something happened. This project makes something happen back.
+
+When a serious alert is raised, a playbook picks it up automatically. It works out whether the attacker's address is worth investigating, looks it up against a threat intelligence service, emails me either way, and blocks the attacker if the alert says an account was actually taken over.
+
+The part worth reading is a workflow that passed every test I wrote and was completely broken. The test alerts I made up had the shape I assumed the SIEM used. Real ones did not, so the lookup ran against an empty value and every single step reported success while delivering an alert with nothing in it.
+
+| | |
+|---|---|
+| What it does | Adds threat intelligence to alerts, notifies an analyst, and blocks confirmed compromises |
+| Tools | Shuffle, VirusTotal API, Gmail SMTP, the Wazuh API |
+| Design decision | The lookup never decides whether you get told, only how urgent it looks |
+| How it was checked | Every branch tested twice: that it acts when it should, and refuses when it should not |
+
 ## Repository structure
 
 ```
-01-wazuh-siem-lab/          the project write up and the evidence for it
+01-wazuh-siem-lab/          detection project: write up and evidence
+02-soc-automation/          automation project: write up and evidence
 stacks/siem/                Wazuh manager, indexer and dashboard
   config/wazuh_cluster/       local_rules.xml, where my custom rules live
 targets/ssh-victim/         the machine being attacked
 attacker/                   the attack tooling
 stacks/endpoint/            a second monitored machine
 ```
+
+The automation platform runs from its own setup outside this repository. What is here is the Wazuh side of it: the rules that raise the alerts, and the configuration that forwards them.
 
 ## Getting started
 
