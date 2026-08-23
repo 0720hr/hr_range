@@ -29,3 +29,15 @@
   </rule>
 
 </group>
+
+<group name="sysmon,windows,powershell,">
+  <rule id="100100" level="12">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)-enc</field>
+    <description>PowerShell executed with an encoded command on $(win.system.computer)</description>
+    <mitre>
+      <id>T1059.001</id>
+      <id>T1027</id>
+    </mitre>
+  </rule>
+</group>

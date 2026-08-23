@@ -38,11 +38,27 @@ The part worth reading is a workflow that passed every test I wrote and was comp
 | Design decision | The lookup never decides whether you get told, only how urgent it looks |
 | How it was checked | Every branch tested twice: that it acts when it should, and refuses when it should not |
 
+### 03. [Endpoint Detection with LimaCharlie](03-limacharlie-edr/)
+
+My SIEM reads log files. This project adds a tool that watches the machine itself, then points both at the same computer.
+
+An EDR, short for endpoint detection and response, sits on one machine and records what it actually does: every process that starts, its full command line, which process launched it. I wrote detection rules for it, then put a second agent on the same machine so my existing SIEM watches it too. The result is one attack caught by both tools at once, the endpoint's own view and the log stream's view.
+
+The part worth reading is the network path. The endpoint is a virtual machine and the SIEM runs in containers on the host, and the two would not talk to each other. A Windows firewall block quietly overrode the rule I added to fix it, because in Windows Firewall a block always beats an allow.
+
+| | |
+|---|---|
+| What it does | Runs an EDR and a SIEM against one Windows endpoint and detects the same attack with both |
+| Tools | LimaCharlie, VMware, Sysmon, Wazuh |
+| MITRE techniques | T1033 System Owner Discovery, T1059.001 PowerShell, T1027 Obfuscated Files or Information |
+| The hard part | Bridging a VMware virtual machine to a Dockerised SIEM across NAT and two firewall layers |
+
 ## Repository structure
 
 ```
 01-wazuh-siem-lab/          detection project: write up and evidence
 02-soc-automation/          automation project: write up and evidence
+03-limacharlie-edr/         endpoint detection project: write up and evidence
 stacks/siem/                Wazuh manager, indexer and dashboard
   config/wazuh_cluster/       local_rules.xml, where my custom rules live
 targets/ssh-victim/         the machine being attacked
@@ -50,7 +66,7 @@ attacker/                   the attack tooling
 stacks/endpoint/            a second monitored machine
 ```
 
-The automation platform runs from its own setup outside this repository. What is here is the Wazuh side of it: the rules that raise the alerts, and the configuration that forwards them.
+The automation platform and the EDR both run from their own setup outside this repository. What is here is the Wazuh side: the rules that raise the alerts, and the configuration that forwards them.
 
 ## Getting started
 
