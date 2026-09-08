@@ -41,3 +41,32 @@
     </mitre>
   </rule>
 </group>
+<group name="sysmon,windows,discovery,">
+  <rule id="100101" level="8">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^whoami\.exe$</field>
+    <description>System/User Discovery: whoami executed on $(win.system.computer) (T1033)</description>
+    <mitre>
+      <id>T1033</id>
+    </mitre>
+  </rule>
+  <rule id="100102" level="6">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^sysinfo\.exe$</field>
+    <description>System Information Discovery: systeminfo executed on $(win.system.computer) (T1082)</description>
+    <mitre>
+      <id>T1082</id>
+    </mitre>
+  </rule>
+</group>
+<group name="sysmon,windows,persistence,">
+  <rule id="100103" level="8">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)^schtasks\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)/create</field>
+    <description>Scheduled task created via schtasks on $(win.system.computer) (T1053.005)</description>
+    <mitre>
+      <id>T1053.005</id>
+    </mitre>
+  </rule>
+</group>
