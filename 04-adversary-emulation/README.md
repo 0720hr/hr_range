@@ -107,7 +107,7 @@ Detecting an attack is only half of the work. The other half is investigating it
 
 - **Assets:** the affected host and account, establishing the scope.
 - **Indicators:** the artifacts each technique left behind (the encoded command, the discovery commands, the Run key, the scheduled task), which could be hunted for on other hosts.
-- **Timeline:** the seven techniques in attacker order, each annotated with the tool that detected it.
+- **Timeline:** the seven techniques in attacker order, each noting which tool detected it, or that neither did. File deletion is included although both tools missed it, because the timeline reconstructs the full attack, not only the steps that alerted.
 - **Tasks and ATT&CK tags:** the investigative actions, mapped back to the framework.
 
 ![Case summary](screenshots/07-iris-case-summary.png)
