@@ -10,3 +10,4 @@ stacks/siem/config/wazuh_indexer/internal_users.yml
 stacks/siem/config/wazuh_dashboard/wazuh.yml
 PROJECT-NOTES.md
 stacks/siem/config/wazuh_cluster/wazuh_manager.conf
+dev-notes.md
