@@ -13,6 +13,7 @@ Every branch of it was tested twice: once to check it does the right thing, and 
 - [1. Getting alerts out of the SIEM](#1-getting-alerts-out-of-the-siem)
 - [2. Deciding which alerts are worth enriching](#2-deciding-which-alerts-are-worth-enriching)
 - [3. Automated containment](#3-automated-containment)
+- [4. The same decisions in Python](#4-the-same-decisions-in-python)
 - [Problems encountered](#problems-encountered)
 - [Verification](#verification)
 - [Lessons learned](#lessons-learned)
@@ -30,6 +31,7 @@ Every branch of it was tested twice: once to check it does the right thing, and 
 | Gmail SMTP | Sending the alert emails |
 | Wazuh Manager API | Triggering the block from the playbook |
 | Docker and Docker Swarm | How Shuffle runs the small containers that do the work |
+| Python, requests, pytest | Rewriting the playbook's decisions as code that can be tested |
 
 SOAR stands for Security Orchestration, Automation and Response. It is a platform where you draw out what should happen when an alert arrives, instead of doing those steps by hand every time.
 
@@ -135,6 +137,86 @@ The SIEM's own blocking is a **reflex**. It is tied to one rule, it happens in u
 The playbook's blocking is **considered**. It can check conditions, use information from elsewhere, and leave a record of why it acted. That is what you want when someone asks afterwards what happened and why.
 
 Real security teams run both, for the same reason a building has both a smoke alarm and a fire procedure.
+
+## 4. The same decisions in Python
+
+The playbook's decisions are now also written as a small Python script with tests, in [`enrichment/`](enrichment/). It reads a Wazuh alert, decides whether the attacker's address is worth looking up, asks VirusTotal if it is, and prints a summary.
+
+It does not replace the playbook. It sends no email and blocks nothing. It exists because a drag and drop workflow cannot be tested, and the worst bug in this project was one that testing should have caught.
+
+| Playbook step | In the script |
+|---|---|
+| Reading the attacker's address | `get_srcip()` |
+| Reading the severity | `get_level()` |
+| The private address pattern | `is_public()` |
+| The VirusTotal Http node | `lookup_ip()` |
+| The splitter and the three branch conditions | `summarize()` |
+
+### The tests use real alerts
+
+The alerts in `tests/fixtures/` were copied out of Wazuh's own alert log after a real attack run, not written by hand. Writing them by hand is how the playbook passed every test while being completely broken.
+
+That paid off straight away. The first alert I pulled out said level 12, while my rules say 13. It was a month old, from before I raised that rule's level. A test built on it would have checked behaviour that no longer exists, so I ran the attack again and used the fresh alerts.
+
+### A library instead of the pattern
+
+The pattern worked, but Python's built in `ipaddress` module knows every reserved range, including some the pattern missed:
+
+| Address | What it is | Pattern said | Script says |
+|---|---|---|---|
+| `172.32.5.1` | Public | public | public |
+| `172.18.0.3` | My lab's attacker | private | private |
+| `100.64.0.1` | Carrier grade NAT, an address an internet provider shares between customers | **public** | private |
+| `224.0.0.1` | Multicast, an address for a group rather than one machine | **public** | private |
+| `fe80::1` | A private IPv6 address | **public** | private |
+
+One trap: the module's own `is_global` check calls multicast addresses public, so the script checks for multicast separately. A test caught that before any code relied on it.
+
+### Enrichment still never decides whether you get told
+
+`summarize()` always returns the alert. Anything that goes wrong with the lookup only changes one field:
+
+| Situation | `enrichment` field |
+|---|---|
+| Private address, or no address | `skipped: no public IP` |
+| No API key set | `skipped: no API key` |
+| Rate limit (four lookups a minute on the free plan) | `{"error": "VirusTotal returned HTTP 429"}` |
+| A web page comes back instead of data | `{"error": "VirusTotal did not return JSON"}` |
+| No network | `{"error": "could not reach VirusTotal: ConnectTimeout"}` |
+| Lookup worked | engines flagging it, network owner, country |
+
+### Proving the tests can fail
+
+All 21 tests pass. That only means something if they can fail, so I broke the code on purpose by removing the multicast check. Exactly one test failed, the one for `224.0.0.1`, and it named the address. Then I put the check back.
+
+The tests that matter most are the refusals. They replace the VirusTotal call with a stand in that fails the test if it ever runs. That proves the script never looks up a private address or an alert with no address, which is the bug that sent the playbook to VirusTotal with an empty value.
+
+The VirusTotal tests never touch the network. They swap in a fake reply, so a rate limit or a broken response can be tested at any time, with no API key.
+
+### Running it
+
+```
+cd 02-soc-automation/enrichment
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest -q
+python enrich.py tests/fixtures/alert_40112.json
+```
+
+On a real account takeover alert:
+
+```json
+{
+  "rule": "40112",
+  "level": 13,
+  "description": "Compromise: successful login from 172.18.0.3 after a brute-force from the same IP (T1110/T1078).",
+  "agent": "ssh-victim",
+  "srcip": "172.18.0.3",
+  "enrichment": "skipped: no public IP"
+}
+```
+
+Lookups need a VirusTotal key in the `VT_API_KEY` environment variable. The key is never stored in this repository.
 
 ## Problems encountered
 
