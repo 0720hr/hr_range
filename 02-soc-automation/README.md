@@ -156,7 +156,7 @@ It does not replace the playbook. It sends no email and blocks nothing. It exist
 
 The alerts in `tests/fixtures/` were copied out of Wazuh's own alert log after a real attack run, not written by hand. Writing them by hand is how the playbook passed every test while being completely broken.
 
-That paid off straight away. The first alert I pulled out said level 12, while my rules say 13. It was a month old, from before I raised that rule's level. A test built on it would have checked behaviour that no longer exists, so I ran the attack again and used the fresh alerts.
+That paid off straight away. The first alert I pulled out said level 12, while my rules say 13. It was nearly two months old, from before I raised that rule's level. A test built on it would have checked behaviour that no longer exists, so I ran the attack again and used the fresh alerts.
 
 ### A library instead of the pattern
 
@@ -170,7 +170,7 @@ The pattern worked, but Python's built in `ipaddress` module knows every reserve
 | `224.0.0.1` | Multicast, an address for a group rather than one machine | **public** | private |
 | `fe80::1` | A private IPv6 address | **public** | private |
 
-One trap: the module's own `is_global` check calls multicast addresses public, so the script checks for multicast separately. A test caught that before any code relied on it.
+One trap: the module's own `is_global` check calls multicast addresses public, so the script checks for multicast separately. I found that by checking the module before writing the function, and a test now holds it in place.
 
 ### Enrichment still never decides whether you get told
 
@@ -409,15 +409,18 @@ A check that lets the right thing through is only half a check. The half that ma
 
 Shuffle runs from its own setup outside this repository. The playbook lives inside Shuffle rather than in a file here, and I have described it above rather than exporting it, because an export contains the API keys embedded in each step.
 
-What is in this repository is the Wazuh side: the rules that produce the alerts, and the configuration that forwards them.
+What is in this repository is the Wazuh side, plus the Python version of the playbook's decisions:
 
 ```
 stacks/siem/config/wazuh_cluster/
   local_rules.xml                 the rules that raise the alerts
   wazuh_manager.conf.example      where the forwarding is configured
+02-soc-automation/enrichment/
+  enrich.py                       the script (see section 4 for how to run it)
+  tests/                          the tests, and three real alerts to test against
 ```
 
 ### Notes
 
 - Inside a container, `localhost` is that container. Wazuh reaches Shuffle at `host.docker.internal` and reaches its own API the same way in reverse.
-- **No credentials are stored here.** The VirusTotal key and the email password live in Shuffle's own settings, and the webhook address is kept out of the repository with a placeholder in its place.
+- **No credentials are stored here.** The VirusTotal key and the email password live in Shuffle's own settings, the Python script reads its key from the `VT_API_KEY` environment variable, and the webhook address is kept out of the repository with a placeholder in its place.
