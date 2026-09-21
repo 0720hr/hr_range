@@ -34,9 +34,10 @@ The part worth reading is a workflow that passed every test I wrote and was comp
 | | |
 |---|---|
 | What it does | Adds threat intelligence to alerts, notifies an analyst, and blocks confirmed compromises |
-| Tools | Shuffle, VirusTotal API, Gmail SMTP, the Wazuh API |
+| Tools | Shuffle, VirusTotal API, Gmail SMTP, the Wazuh API, Python |
 | Design decision | The lookup never decides whether you get told, only how urgent it looks |
 | How it was checked | Every branch tested twice: that it acts when it should, and refuses when it should not |
+| In Python | The playbook's decisions rewritten as a script, with 21 tests run against real alerts from the SIEM |
 
 ### 03. [Endpoint Detection with LimaCharlie](03-limacharlie-edr/)
 
@@ -73,6 +74,7 @@ The part worth reading is the finding itself: neither tool was better than the o
 ```
 01-wazuh-siem-lab/          detection project: write up and evidence
 02-soc-automation/          automation project: write up and evidence
+  enrichment/                 the playbook's decisions in Python, with tests
 03-limacharlie-edr/         endpoint detection project: write up and evidence
 04-adversary-emulation/     emulation project: coverage matrix, custom rules, case work
 stacks/siem/                Wazuh manager, indexer and dashboard
@@ -82,7 +84,7 @@ attacker/                   the attack tooling
 stacks/endpoint/            a second monitored machine
 ```
 
-The automation platform, the EDR and the case-management platform all run from their own setup outside this repository. What is here is the Wazuh side: the rules that raise the alerts, and the configuration that forwards them.
+The automation platform, the EDR and the case-management platform all run from their own setup outside this repository. What is here is the Wazuh side, the rules that raise the alerts and the configuration that forwards them, plus the Python version of the automation project's decisions.
 
 ## Getting started
 
